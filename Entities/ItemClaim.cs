@@ -1,12 +1,11 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 
-public class ItemClaim
+namespace SimpleSecureStore
 {
-    [Key]
-    public Guid Id { get; set; }
-    [Required]
-    public string ClaimType { get; set; }
-    public string Value { get; set; }
-    public Item Item { get; set; }
+    public class ItemClaim
+    {
+        public Guid Id { get; set; }
+        public string ClaimType { get; set; }
+        public string Value { get; set; }
+    }
 }

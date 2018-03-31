@@ -1,7 +1,10 @@
-public enum RuleOperator
+namespace SimpleSecureStore
 {
-    Equals,
-    DoesNotEqual,
-    Exists,
-    EqualsCurrent    
+    public enum RuleOperator
+    {
+        Equals,
+        DoesNotEqual,
+        Exists,
+        EqualsCurrent    
+    }
 }

@@ -1,5 +1,8 @@
-public enum AccessType
+namespace SimpleSecureStore
 {
-    Read,
-    Write
+    public enum AccessType
+    {
+        Read,
+        Write
+    }
 }
