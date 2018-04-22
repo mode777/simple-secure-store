@@ -1,22 +1,26 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Security.Core.Interfaces;
+using SimpleSecureStore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace SimpleSecureStore.Framework.Data
+namespace SimpleSecureStore
 {
-    public class EfRepository<T> : IAsyncRepository<T>
-        where T : class
+    public class EfRepository<T> : IRepository<T> where T : class
     {
-        protected readonly DbContext _dbContext;
+        private readonly StorageContext _dbContext;
 
-        public EfRepository(DbContext dbContext)
+        public EfRepository(StorageContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<T> AddAsync(T entity)
+        protected DbContext DbContext => _dbContext;
+
+        public async virtual Task<T> AddAsync(T entity)
         {
             _dbContext.Set<T>().Add(entity);
             await _dbContext.SaveChangesAsync();
@@ -24,28 +28,33 @@ namespace SimpleSecureStore.Framework.Data
             return entity;
         }
 
-        public async Task DeleteAsync(T entity)
+        public async virtual Task DeleteAsync(T entity)
         {
             _dbContext.Set<T>().Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<T> GetByIdAsync(params object[] keys)
+        public async virtual Task<T> GetByKeyAsync(params object[] keys)
         {
             return await _dbContext.Set<T>().FindAsync(keys);
         }
 
-        public async Task<T> GetSingleBySpecAsync(ISpecification<T> spec)
+        public async Task<T> GetSingleAsync(ISpecification<T> spec)
         {
-            return (await ListAsync(spec)).FirstOrDefault();
+            return await Query(spec).FirstOrDefaultAsync();
         }
 
-        public async Task<List<T>> ListAllAsync()
+        public async virtual Task<IEnumerable<T>> ListAllAsync()
         {
             return await _dbContext.Set<T>().ToListAsync();
         }
 
-        public async Task<List<T>> ListAsync(ISpecification<T> spec)
+        public async Task<IEnumerable<T>> ListAsync(ISpecification<T> spec)
+        {
+            return await Query(spec).ToListAsync();
+        }
+
+        protected virtual IQueryable<T> Query(ISpecification<T> spec)
         {
             // fetch a Queryable that includes all expression-based includes
             var queryableResultWithIncludes = spec.Includes
@@ -58,12 +67,11 @@ namespace SimpleSecureStore.Framework.Data
                     (current, include) => current.Include(include));
 
             // return the result of the query using the specification's criteria expression
-            return await secondaryResult
-                            .Where(spec.Criteria)
-                            .ToListAsync();
+            return secondaryResult
+                            .Where(spec.Criteria);
         }
 
-        public async Task UpdateAsync(T entity)
+        public async virtual Task UpdateAsync(T entity)
         {
             _dbContext.Entry(entity).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
